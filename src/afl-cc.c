@@ -899,7 +899,6 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
     }
 
-    OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
     if (need_aflpplib || !strcmp(cur, "-fsanitize=fuzzer")) {
 
       u8 *afllib = find_object("libAFLExtractor.a", argv[0]);
