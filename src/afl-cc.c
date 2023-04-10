@@ -899,13 +899,14 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
     }
 
+    OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
     if (need_aflpplib || !strcmp(cur, "-fsanitize=fuzzer")) {
 
-      u8 *afllib = find_object("libAFLDriver.a", argv[0]);
+      u8 *afllib = find_object("libAFLExtractor.a", argv[0]);
 
       if (!be_quiet) {
 
-        OKF("Found '-fsanitize=fuzzer', replacing with libAFLDriver.a");
+        OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
 
       }
 
@@ -914,7 +915,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
         if (!be_quiet) {
 
           WARNF(
-              "Cannot find 'libAFLDriver.a' to replace '-fsanitize=fuzzer' in "
+              "Cannot find 'libAFLExtractor.a' to replace '-fsanitize=fuzzer' in "
               "the flags - this will fail!");
 
         }
