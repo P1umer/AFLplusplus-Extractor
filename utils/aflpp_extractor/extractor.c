@@ -28,7 +28,6 @@ __attribute__((weak)) int LLVMFuzzerInitialize(int *argc, char ***argv){
 }
 
 #define INITIAL_SIZE (100)
-#define MAX_LENGTH(x, y) ( ((x) > (y)) ? (x) : y )
 
 // #define kMaxAflInputSize (1 * 1024 * 1024)
 // static uint8_t AflInputBuf[kMaxAflInputSize];
@@ -100,6 +99,5 @@ size_t mutate_helper_buffer_size(){
     return afl_mutate_helper->len;
 }
 
-#undef MAX_LENGTH
 #undef INITIAL_SIZE
 
