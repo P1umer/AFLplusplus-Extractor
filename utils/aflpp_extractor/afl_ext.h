@@ -17,7 +17,7 @@ typedef struct mutate_helper {
 } mutate_helper_t;
 
 // extern function used in AFL++
-extern mutate_helper_init();
+extern void mutate_helper_init();
 extern size_t mutate_helper_generate(unsigned char *buf, size_t buf_size);
 extern uint8_t* mutate_helper_buffer();
 extern size_t mutate_helper_buffer_size();
