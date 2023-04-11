@@ -20,23 +20,20 @@ endif
 CC := clang
 CFLAGS := -O3 -funroll-loops -g -fPIC
 
-all:    libAFLExtractor.a  reproducer
+all:    libAFLExtractor.a  extractor_test_fuzzer reproducer
 
 extractor.o: extractor.c
 	-$(CC) -I. -I../../include $(CFLAGS) -c extractor.c
 
-extractor_test.o: extractor_test.c
-	-$(CC) -I. -I../../include $(CFLAGS) -c extractor_test.c
-
 libAFLExtractor.a:      extractor.o
 	@ar rc libAFLExtractor.a extractor.o
-	# @cp -vf libAFLExtractor.a ../../
+	@cp -vf libAFLExtractor.a ../../
 
-libExtractorTest.a:     extractor_test.o
-	@ar rc libExtractorTest.a extractor_test.o
+extractor_test_fuzzer: extractor_test.c libAFLExtractor.a
+	../../afl-clang-fast -fsanitize=fuzzer -I. -o extractor_test_fuzzer extractor_test.c
 
-reproducer: libAFLExtractor.a libExtractorTest.a
-	/Users/p1umer/Git/AFLplusplus/afl-clang-fast -D_DEBUG=\"1\" -I../../include -Wl -funroll-loops -o reproducer libExtractorTest.a libAFLExtractor.a reproducer.c
+reproducer: extractor_test_fuzzer
+	../../afl-clang-fast -I../../include -Wl -funroll-loops -o reproducer extractor_test_fuzzer libAFLExtractor.a reproducer.c
 
 clean:
-	rm -f *.o *.a *~ core reproducer
+	rm -f *.o *.a *~ core reproducer extractor_test_fuzzer

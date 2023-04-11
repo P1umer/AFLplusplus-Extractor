@@ -903,6 +903,12 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
       u8 *afllib = find_object("libAFLExtractor.a", argv[0]);
 
+#ifdef __APPLE__
+      cc_params[cc_par_cnt++] = "-dynamiclib";
+#else
+      cc_params[cc_par_cnt++] = "-shared";
+#endif
+
       if (!be_quiet) {
 
         OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
