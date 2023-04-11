@@ -67,7 +67,7 @@ extern "C" {
 
 #### 2) Call `mutate_helper_buffer_copy` after the `generate_magic_data`:
 ```
-mutate_helper_buffer_copy(modified_data, size + 2);
+mutate_helper_buffer_copy(modified_data, modified_data_length);
 ```
 
 #### 3) Remove the `target_function` call.
