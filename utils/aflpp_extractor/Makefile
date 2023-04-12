@@ -33,7 +33,7 @@ extractor_test_fuzzer: extractor_test.c libAFLExtractor.a
 	../../afl-clang-fast -fsanitize=fuzzer -I. -o extractor_test_fuzzer extractor_test.c
 
 reproducer: extractor_test_fuzzer
-	../../afl-clang-fast -I../../include -Wl -funroll-loops -o reproducer extractor_test_fuzzer libAFLExtractor.a reproducer.c
+	../../afl-clang-fast -I../../include -Wl -funroll-loops -o reproducer ./extractor_test_fuzzer ./libAFLExtractor.a reproducer.c
 
 clean:
 	rm -f *.o *.a *~ core reproducer extractor_test_fuzzer
