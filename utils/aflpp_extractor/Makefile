@@ -8,15 +8,6 @@ ifeq "$(shell uname -s)" "Darwin"
   LDFLAGS += $(SDK_LD)
 endif
 
-ifeq "" "$(LLVM_CONFIG)"
-  LLVM_CONFIG := llvm-config
-endif
-LLVM_BINDIR = $(shell $(LLVM_CONFIG) --bindir 2>/dev/null)
-ifneq "" "$(LLVM_BINDIR)"
-  ifeq "$(shell test -x $(LLVM_BINDIR)/clang && echo 1)" "1"
-    CC := $(LLVM_BINDIR)/clang
-  endif
-endif
 CC := clang
 CFLAGS := -O3 -funroll-loops -g -fPIC
 
