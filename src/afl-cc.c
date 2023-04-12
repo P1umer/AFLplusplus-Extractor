@@ -59,6 +59,9 @@ static u8   cwd[4096];
 static u8   cmplog_mode;
 u8          use_stdin;                                             /* dummy */
 static int  passthrough;
+static int  extractor_mode;
+static u8 **cc_params_ext;              /* Parameters for extractor mode    */
+static u32  cc_par_cnt_ext = 1;         /* Param count for extractor mode, including argv0    */
 // static u8 *march_opt = CFLAGS_OPT;
 
 enum {
@@ -384,6 +387,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
      have_c = 0, partial_linking = 0;
 
   cc_params = ck_alloc((argc + 128) * sizeof(u8 *));
+  cc_params_ext = ck_alloc((argc + 128) * sizeof(u8 *));
 
   if (lto_mode) {
 
@@ -432,6 +436,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
     }
 
     cc_params[0] = alt_cxx;
+    cc_params_ext[0] = alt_cxx;
 
   } else {
 
@@ -469,6 +474,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
     }
 
     cc_params[0] = alt_cc;
+    cc_params_ext[0] = alt_cc;
 
   }
 
@@ -901,38 +907,72 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
     if (need_aflpplib || !strcmp(cur, "-fsanitize=fuzzer")) {
 
-      u8 *afllib = find_object("libAFLExtractor.a", argv[0]);
+      if (extractor_mode) {
+        u8 *afllib_ext = find_object("libAFLExtractor.a", argv[0]);
 
-#ifdef __APPLE__
-      cc_params[cc_par_cnt++] = "-dynamiclib";
-#else
-      cc_params[cc_par_cnt++] = "-shared";
-#endif
-
-      if (!be_quiet) {
-
-        OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
-
-      }
-
-      if (!afllib) {
+  #ifdef __APPLE__
+        cc_params_ext[cc_par_cnt_ext++] = "-dynamiclib";
+  #else
+        cc_params_ext[cc_par_cnt_ext++] = "-shared";
+  #endif
 
         if (!be_quiet) {
 
-          WARNF(
-              "Cannot find 'libAFLExtractor.a' to replace '-fsanitize=fuzzer' in "
-              "the flags - this will fail!");
+          OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
 
         }
 
-      } else {
+        if (!afllib_ext) {
 
-        cc_params[cc_par_cnt++] = afllib;
+          if (!be_quiet) {
+
+            WARNF(
+                "Cannot find 'libAFLExtractor.a' to replace '-fsanitize=fuzzer' in "
+                "the flags - this will fail!");
+
+          }
+
+        } else {
+
+          cc_params_ext[cc_par_cnt_ext++] = afllib_ext;
 
 #ifdef __APPLE__
-        cc_params[cc_par_cnt++] = "-undefined";
-        cc_params[cc_par_cnt++] = "dynamic_lookup";
+          cc_params_ext[cc_par_cnt_ext++] = "-undefined";
+          cc_params_ext[cc_par_cnt_ext++] = "dynamic_lookup";
 #endif
+
+        }
+      } else {
+          /* AFL Driver */
+          u8 *afllib = find_object("libAFLDriver.a", argv[0]);
+
+          if (!be_quiet) {
+
+            OKF("Found '-fsanitize=fuzzer', replacing with libAFLDriver.a");
+
+          }
+
+          if (!afllib) {
+
+            if (!be_quiet) {
+
+              WARNF(
+                  "Cannot find 'libAFLDriver.a' to replace '-fsanitize=fuzzer' in "
+                  "the flags - this will fail!");
+
+            }
+
+          } else {
+
+            cc_params[cc_par_cnt++] = afllib;
+
+#ifdef __APPLE__
+            cc_params[cc_par_cnt++] = "-undefined";
+            cc_params[cc_par_cnt++] = "dynamic_lookup";
+#endif
+
+          }
+
 
       }
 
@@ -973,6 +1013,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
     if (!strncmp(cur, "-funroll-loop", 13)) have_unroll = 1;
 
     cc_params[cc_par_cnt++] = cur;
+    cc_params_ext[cc_par_cnt_ext++] = cur;
 
   }
 
@@ -1347,6 +1388,13 @@ int main(int argc, char **argv, char **envp) {
   if (getenv("AFL_PASSTHROUGH") || getenv("AFL_NOOPT")) {
 
     passthrough = 1;
+    if (!debug) { be_quiet = 1; }
+
+  }
+
+  if (getenv("AFL_EXTRACT")) {
+
+    extractor_mode = 1;
     if (!debug) { be_quiet = 1; }
 
   }
@@ -2328,16 +2376,29 @@ int main(int argc, char **argv, char **envp) {
     fflush(stderr);
 
   }
+  
+  if (1) {
+
+    DEBUGF("cd '%s';", getthecwd());
+    for (i = 0; i < (s32)cc_par_cnt_ext; i++)
+      SAYF(" '%s'", cc_params_ext[i]);
+    SAYF("\n");
+    fflush(stdout);
+    fflush(stderr);
+
+  }
 
   if (passthrough) {
 
     argv[0] = cc_params[0];
     execvp(cc_params[0], (char **)argv);
 
+  } else if (extractor_mode) {
+
+    execvp(cc_params_ext[0], (char **)cc_params_ext);
+
   } else {
-
     execvp(cc_params[0], (char **)cc_params);
-
   }
 
   FATAL("Oops, failed to execute '%s' - check your PATH", cc_params[0]);
