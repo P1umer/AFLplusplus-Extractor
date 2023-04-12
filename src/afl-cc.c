@@ -51,7 +51,7 @@ static u32  cc_par_cnt = 1;            /* Param count, including argv0      */
 static u8   clang_mode;                /* Invoked as afl-clang*?            */
 static u8   llvm_fullpath[PATH_MAX];
 static u8   instrument_mode, instrument_opt_mode, ngram_size, ctx_k, lto_mode;
-static u8   compiler_mode, plusplus_mode, have_instr_env = 0, need_aflpplib = 0, aflpplib_nomain = 0;
+static u8   compiler_mode, plusplus_mode, have_instr_env = 0, need_aflpplib = 0;
 static u8   have_gcc, have_llvm, have_gcc_plugin, have_lto, have_instr_list = 0;
 static u8  *lto_flag = AFL_CLANG_FLTO, *argvnull;
 static u8   debug;
@@ -899,10 +899,7 @@ static void edit_params(u32 argc, char **argv, char **envp) {
                 strncmp(cur, "sanitize-coverage-deny",
                         strlen("sanitize-coverage-deny")) &&
                 instrument_mode != INSTRUMENT_LLVMNATIVE)) {
-      if (extractor_mode) { 
-        need_aflpplib = 1;
-        aflpplib_nomain = 1;
-      }
+      if (extractor_mode) { need_aflpplib = 1; }
 
       if (!be_quiet) { WARNF("Found '%s' - stripping!", cur); }
       continue;
@@ -913,15 +910,11 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
       if (extractor_mode) {
         u8 *afllib_ext = find_object("libAFLExtractor.a", argv[0]);
-          if(!aflpplib_nomain){
 #ifdef __APPLE__
-            cc_params_ext[cc_par_cnt_ext++] = "-dynamiclib";
+        cc_params_ext[cc_par_cnt_ext++] = "-dynamiclib";
 #else
-            cc_params_ext[cc_par_cnt_ext++] = "-shared";
+        cc_params_ext[cc_par_cnt_ext++] = "-shared";
 #endif
-          }
-
-
         if (!be_quiet) {
 
           OKF("Found '-fsanitize=fuzzer', replacing with libAFLExtractor.a");
@@ -1264,6 +1257,10 @@ static void edit_params(u32 argc, char **argv, char **envp) {
 
     cc_params[cc_par_cnt++] = "-Wno-unused-command-line-argument";
 
+  }
+
+  if (extractor_mode) {
+    cc_params_ext[cc_par_cnt_ext++] = "-Wno-unused-command-line-argument";
   }
 
   if (preprocessor_only || have_c || !non_dash) {
