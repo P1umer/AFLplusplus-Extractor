@@ -10,13 +10,15 @@ This will create the patched `afl-cc`.
 2. Build the plugin:
 ```
 cd utils/aflpp_extractor
-make
+AFL_EXTRACT=1 make
 ```
 
 This will compile and create the files:
 - `libAFLExtractor.a`: The static library containing the AFL++ Extractor plugin.
 - `extractor_test_fuzzer`: The library that demonstrates how to extract generator using this plugin.
 - `reproducer`: The program that reads an input file, processes it with the extracted generator, and writes the result to an output file.
+
+The `AFL EXTRACT` environment variable makes `afl-cc` treat `-fsanitize=fuzzer*` as linking `libAFLExtractor.a`, and compiles the target as a shared library (maybe executable bin file originally) automatically.
 
 ## For Your Use
 Assume you have a generation-based libfuzzer `fuzzer_harness.c`:
@@ -77,7 +79,9 @@ mutate_helper_buffer_copy(modified_data, modified_data_length);
 
 #### 4) Recompile this libfuzzer, replacing clang with `afl-clang-fast`, with `AFL_PATH` needed.
 ```
+export AFL EXTRACT=1
+export AFL_PATH={your_afl_install_path}
 afl-clang-fast -o fuzz -fsanitize=fuzzer fuzzer_harness.cc
 ```
-The afl-clang-fast will automatically produce a shared library with `libAFLExtractor.a` linked to it, which will be used by `afl-fuzz` later on.
+The `afl-clang-fast` will automatically produce a shared library with the same name, which will be used by `afl-fuzz` later on.
 
