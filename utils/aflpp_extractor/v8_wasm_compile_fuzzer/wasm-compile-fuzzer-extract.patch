@@ -1,8 +1,8 @@
 diff --git a/test/fuzzer/wasm-fuzzer-common.cc b/test/fuzzer/wasm-fuzzer-common.cc
-index 172412c7c7..37edab6117 100644
+index 172412c7c7..275629b83a 100644
 --- a/test/fuzzer/wasm-fuzzer-common.cc
 +++ b/test/fuzzer/wasm-fuzzer-common.cc
-@@ -29,6 +29,13 @@
+@@ -29,6 +29,19 @@
  #include "test/common/wasm/wasm-module-runner.h"
  #include "test/fuzzer/fuzzer-support.h"
  
@@ -11,12 +11,18 @@ index 172412c7c7..37edab6117 100644
 +    size_t len;
 +} mutate_helper_t;
 +
-+extern "C" void mutate_helper_buffer_copy(unsigned char *buf, size_t buf_size);
++#ifdef __cplusplus
++extern "C" {
++#endif
++    void mutate_helper_buffer_copy(unsigned char *buf, size_t buf_size);
++#ifdef __cplusplus
++}
++#endif
 +
  namespace v8 {
  namespace internal {
  namespace wasm {
-@@ -767,6 +774,7 @@ void OneTimeEnableStagedWasmFeatures(v8::Isolate* isolate) {
+@@ -767,6 +780,7 @@ void OneTimeEnableStagedWasmFeatures(v8::Isolate* isolate) {
    static EnableStagedWasmFeatures one_time_enable_staged_features(isolate);
  }
  
@@ -24,7 +30,7 @@ index 172412c7c7..37edab6117 100644
  void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
                                           bool require_valid) {
    v8_fuzzer::FuzzerSupport* support = v8_fuzzer::FuzzerSupport::Get();
-@@ -809,6 +817,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
+@@ -809,6 +823,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
    // 0: TurboFan
    // 1: Liftoff
    // 2: Liftoff for debugging
@@ -32,7 +38,7 @@ index 172412c7c7..37edab6117 100644
    uint8_t tier_mask = 0;
    uint8_t debug_mask = 0;
    for (int i = 0; i < 4; ++i, configuration_byte /= 3) {
-@@ -816,6 +825,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
+@@ -816,6 +831,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
      tier_mask |= (compiler_config == 0) << i;
      debug_mask |= (compiler_config == 2) << i;
    }
@@ -40,7 +46,7 @@ index 172412c7c7..37edab6117 100644
    // Note: After dividing by 3 for 4 times, configuration_byte is within [0, 3].
  
  // Control whether Liftoff or the interpreter will be used as the reference
-@@ -834,6 +844,31 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
+@@ -834,6 +850,31 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
      return;
    }
  
@@ -72,7 +78,7 @@ index 172412c7c7..37edab6117 100644
    testing::SetupIsolateForWasmModule(i_isolate);
  
    ErrorThrower interpreter_thrower(i_isolate, "Interpreter");
-@@ -882,6 +917,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
+@@ -882,6 +923,7 @@ void WasmExecutionFuzzer::FuzzWasmModule(base::Vector<const uint8_t> data,
    }
    InterpretAndExecuteModule(i_isolate, compiled_module.ToHandleChecked(),
                              module_ref, &max_steps, &nondeterminism);

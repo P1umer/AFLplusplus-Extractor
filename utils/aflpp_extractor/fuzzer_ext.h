@@ -19,7 +19,7 @@ typedef struct mutate_helper {
 #ifdef __cplusplus
 extern "C" {
 #endif
-    extern void mutate_helper_buffer_copy(unsigned char *buf, size_t buf_size);
+    void mutate_helper_buffer_copy(unsigned char *buf, size_t buf_size);
 #ifdef __cplusplus
 }
 #endif 
