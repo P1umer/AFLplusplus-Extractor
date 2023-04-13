@@ -83,5 +83,5 @@ export AFL EXTRACT=1
 export AFL_PATH={your_afl_install_path}
 afl-clang-fast -o fuzz -fsanitize=fuzzer fuzzer_harness.cc
 ```
-The `afl-clang-fast` will automatically produce a shared library with the same name, which will be used by `afl-fuzz` later on.
+The `afl-clang-fast` will automatically produce a shared library with the same name, which can be used in custom mutator of `afl-fuzz` later on.
 
